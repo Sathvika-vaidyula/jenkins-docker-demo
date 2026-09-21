@@ -3,34 +3,38 @@ pipeline {
 
     stages {
 
-        stage('Checkout') {
+        stage('Build') {
             steps {
-                echo 'Code has been checked out from GitHub'
-            }
-        }
+                echo 'Building Docker image...'
 
-        stage('Docker Build') {
-            steps {
                 sh '''
-                    echo "Building Docker image..."
                     docker build -t jenkins-demo:1.0 .
                 '''
             }
         }
 
-        stage('Docker Run') {
+        stage('Test') {
             steps {
-                sh '''
-                    echo "Starting Docker container..."
+                echo 'Testing Docker image...'
 
-                    docker rm -f jenkins-demo || true
+                sh '''
+                    docker run --rm jenkins-demo:1.0 nginx -t
+                '''
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                echo 'Deploying application...'
+
+                sh '''
+                    docker stop jenkins-demo || true
+                    docker rm jenkins-demo || true
 
                     docker run -d \
                         --name jenkins-demo \
                         -p 8081:80 \
                         jenkins-demo:1.0
-
-                    echo "Container started successfully!"
                 '''
             }
         }
